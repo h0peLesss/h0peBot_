@@ -30,6 +30,7 @@ namespace h0peBot_
         //то при вызове первой команды будет срабатывать вторая
         //из-за того, что команда считывает ввод через функцию .Contains()
         //решения этой проблемы я (пока) не нашел
+        //моё решение - не пользоваться этим говном 4Голова
         
         {
 			{"!тест члена", "хуятый хуй, опизденные яйца"}, {"!тест", "тест кого? я тут один"},
@@ -69,6 +70,19 @@ namespace h0peBot_
 			}
 		}
 
+		public bool RegexCheck(string msg, string reg) 
+		{
+			Regex regex = new Regex(reg);
+			if (regex.IsMatch(msg))
+			{
+				return true;
+			}
+			else 
+			{
+				return false;
+			}
+		}
+
 		public void Chat()
 		{
 			while (true)
@@ -81,7 +95,11 @@ namespace h0peBot_
 					if (message == "PING :tmi.twitch.tv")
 					{
 						SendCommand("PONG", ":tmi.twitch.tv");
-					}
+					} 
+					if (RegexCheck(message, "!мамб(рес|ерс) маниф[юе]р"))
+					{
+						SendMessage("Ничего нет лушего выпить теплого, свежего камшота TPFufun");
+					} 
 				}
 			}
 		}
