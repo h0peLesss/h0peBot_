@@ -58,9 +58,13 @@ namespace h0peBot_
 			string reply = null;
 			foreach (var pair in commands)
 			{
-				if (msg.Contains(pair.Key)) //детекцию команд нужно переписывать, 
-											//иначе он замечает команды посреди сообщения, 
-											//а не только в начале
+				if (msg.Contains("PRIVMSG"))
+				{
+					msg = msg.Split(":", 2, StringSplitOptions.RemoveEmptyEntries)[1];
+				}
+				if (msg.StartsWith(pair.Key))
+				//детекцию команд переписал, 
+				//теперь замечает команду только в начале сообщения
 				{
 					reply = pair.Value;
 					break;
@@ -102,6 +106,7 @@ namespace h0peBot_
 					{
 						SendMessage("Ничего нет лушего выпить теплого, свежего камшота TPFufun");
 					}
+
 				}
 			}
 		}
