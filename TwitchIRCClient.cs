@@ -58,7 +58,9 @@ namespace h0peBot_
 			string reply = null;
 			foreach (var pair in commands)
 			{
-				if (msg.Contains(pair.Key))
+				if (msg.Contains(pair.Key)) //детекцию команд нужно переписывать, 
+											//иначе он замечает команды посреди сообщения, 
+											//а не только в начале
 				{
 					reply = pair.Value;
 					break;
@@ -70,14 +72,14 @@ namespace h0peBot_
 			}
 		}
 
-		public bool RegexCheck(string msg, string reg) 
+		public bool RegexCheck(string msg, string reg)
 		{
 			Regex regex = new Regex(reg);
 			if (regex.IsMatch(msg))
 			{
 				return true;
 			}
-			else 
+			else
 			{
 				return false;
 			}
@@ -95,11 +97,11 @@ namespace h0peBot_
 					if (message == "PING :tmi.twitch.tv")
 					{
 						SendCommand("PONG", ":tmi.twitch.tv");
-					} 
+					}
 					if (RegexCheck(message, "!мамб(рес|ерс) маниф[юе]р"))
 					{
 						SendMessage("Ничего нет лушего выпить теплого, свежего камшота TPFufun");
-					} 
+					}
 				}
 			}
 		}
