@@ -26,7 +26,7 @@ namespace h0peBot_
 		private string OAuthToken;
 		private Dictionary<string, string> commands = new Dictionary<string, string>
         
-        //если разместить "!тест члена" после "!тест",
+        //если разместить "!тест члена" после "!тест" в ,
         //то при вызове первой команды будет срабатывать вторая
         //из-за того, что команда считывает ввод через функцию .Contains()
         //решения этой проблемы я (пока) не нашел
