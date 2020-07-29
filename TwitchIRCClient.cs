@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 //основа кода "позаимствована" у юзера AmbushedRaccoon, большое ему за это спасiбi
 //https://github.com/AmbushedRaccoon/TwitchChatBot
@@ -34,6 +35,7 @@ namespace h0peBot_
         
         {
 			{"!тест члена", "хуятый хуй, опизденные яйца"}, {"!тест", "тест кого? я тут один"},
+			{"!мамб(рес|ерс) маниф[юе]р", "Ничего нет лушего выпить теплого, свежего камшота TPFufun"}
 		};
 
 		public TwitchIRCClient()
@@ -62,9 +64,7 @@ namespace h0peBot_
 				{
 					msg = msg.Split(":", 2, StringSplitOptions.RemoveEmptyEntries)[1];
 				}
-				if (msg.StartsWith(pair.Key))
-				//детекцию команд переписал, 
-				//теперь замечает команду только в начале сообщения
+				if (RegexCheck(msg, "^"+pair.Key))
 				{
 					reply = pair.Value;
 					break;
@@ -102,11 +102,6 @@ namespace h0peBot_
 					{
 						SendCommand("PONG", ":tmi.twitch.tv");
 					}
-					if (RegexCheck(message, "!мамб(рес|ерс) маниф[юе]р"))
-					{
-						SendMessage("Ничего нет лушего выпить теплого, свежего камшота TPFufun");
-					}
-
 				}
 			}
 		}
