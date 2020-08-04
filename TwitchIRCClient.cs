@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 //основа кода "позаимствована" у юзера AmbushedRaccoon, большое ему за это спасiбi
@@ -25,6 +27,7 @@ namespace h0peBot_
 		private StreamReader reader;
 		private StreamWriter writer;
 		private string OAuthToken;
+		private List<string> chatBuff = new List<string>();
 		private Dictionary<string, string> commands = new Dictionary<string, string>
         
         //если разместить "!тест члена" после "!тест" в ,
@@ -34,9 +37,9 @@ namespace h0peBot_
         //моё решение - не пользоваться этим говном 4Голова
         
         {
-			{"!тест члена", "хуятый хуй, опизденные яйца"}, {"!тест", "тест кого? я тут один"},
-			{"!мамб(рес|ерс) маниф[юе]р", "Ничего нет лушего выпить теплого, свежего камшота TPFufun"}
-		};
+	  {"!тест члена", "хуятый хуй, опизденные яйца"}, {"!тест", "тест кого? я тут один"},
+	  {"!мамб(рес|ерс) маниф[юе]р", "Ничего нет лушего выпить теплого, свежего камшота TPFufun"}
+	};
 
 		public TwitchIRCClient()
 		{
@@ -55,24 +58,33 @@ namespace h0peBot_
 			SendCommand("JOIN", "#" + TwitchInit.ChannelName);
 		}
 
-		public void CheckCommand(string msg)
+		public void CheckCommand()
 		{
-			string reply = null;
-			foreach (var pair in commands)
+			while (true)
 			{
-				if (msg.Contains("PRIVMSG"))
+				if (chatBuff.Count == 0)
 				{
-					msg = msg.Split(":", 2, StringSplitOptions.RemoveEmptyEntries)[1];
+					continue;
 				}
-				if (RegexCheck(msg, "^"+pair.Key))
+				string msg = chatBuff.First();
+				chatBuff = chatBuff.Skip(1).ToList();
+				string reply = null;
+				foreach (var pair in commands)
 				{
-					reply = pair.Value;
-					break;
+					if (msg.Contains("PRIVMSG"))
+					{
+						msg = msg.Split(":", 2, StringSplitOptions.RemoveEmptyEntries)[1];
+					}
+					if (RegexCheck(msg, "^" + pair.Key))
+					{
+						reply = pair.Value;
+						break;
+					}
 				}
-			}
-			if (reply != null)
-			{
-				SendMessage(reply);
+				if (reply != null)
+				{
+					SendMessage(reply);
+				}
 			}
 		}
 
@@ -96,8 +108,8 @@ namespace h0peBot_
 				string message = reader.ReadLine();
 				if (message != null)
 				{
-					System.Console.Out.WriteLine(message);
-					CheckCommand(message);
+					Console.WriteLine(message);
+					chatBuff.Add(message);
 					if (message == "PING :tmi.twitch.tv")
 					{
 						SendCommand("PONG", ":tmi.twitch.tv");
