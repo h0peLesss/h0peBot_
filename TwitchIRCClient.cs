@@ -27,6 +27,7 @@ namespace h0peBot_
 		private StreamReader reader;
 		private StreamWriter writer;
 		private string OAuthToken;
+		private Dictionary<string, DateTime> cooldownDict = new Dictionary<string, DateTime> { };
 		private List<string> chatBuff = new List<string>();
 		private Dictionary<string, string> commands = new Dictionary<string, string>
         
@@ -36,10 +37,8 @@ namespace h0peBot_
         //решения этой проблемы я (пока) не нашел
         //моё решение - не пользоваться этим говном 4Голова
         
-        {
-	  {"!тест члена", "хуятый хуй, опизденные яйца"}, {"!тест", "тест кого? я тут один"},
-	  {"!мамб(рес|ерс) маниф[юе]р", "Ничего нет лушего выпить теплого, свежего камшота TPFufun"}
-	};
+        { {"!тест члена", "хуятый хуй, опизденные яйца"}, {"!тест", "тест кого? я тут один"},
+	{"!мамб(рес|ерс) маниф[юе]р", "Ничего нет лушего выпить теплого, свежего камшота TPFufun"} };
 
 		public TwitchIRCClient()
 		{
@@ -67,15 +66,50 @@ namespace h0peBot_
 					continue;
 				}
 				string msg = chatBuff.First();
-				chatBuff = chatBuff.Skip(1).ToList();
+				chatBuff.RemoveAt(0);
 				string reply = null;
+				if (msg.Contains("PRIVMSG"))
+				{
+					msg = msg.Split(":", 2, StringSplitOptions.RemoveEmptyEntries)[1];
+				}
+				else
+				{
+					continue;
+				}
+				if (RegexMatch(msg, "^!ра си я"))
+				{
+					string[] rus = { "РА", "СИ", "Я" };
+					SendMessage(rus, 1000);
+					continue;
+				}
+				else if (RegexMatch(msg, "^!слава украине"))
+				{
+					string[] ukr = {
+					"/color DodgerBlue", "ГЕРОЯМ",
+					"/color GoldenRod", "СЛАВА",
+					"/color BlueViolet"};
+					SendMessage(ukr);
+					continue;
+				}
+				else if (RegexMatch(msg, "^!ебаный задрот"))
+				{
+					if (!CooldownElapsed("rules", 30))
+					{
+						continue;
+					}
+					string[] rules = {
+					"В ЧАТЕ ЗАПРЕЩЕНЫ:",
+					"НЕГРЫ", "ПИДАРАСЫ",
+					"ЧИН-ЧОНГИ", "Ж*НЩИНЫ",
+					"УКРОПЫ","ЖИДЫ",
+					"ФУРРИ", "НАЗАРЫ" };
+					SendMessage(rules, 1000);
+					cooldownDict["rules"] = DateTime.Now;
+					continue;
+				}
 				foreach (var pair in commands)
 				{
-					if (msg.Contains("PRIVMSG"))
-					{
-						msg = msg.Split(":", 2, StringSplitOptions.RemoveEmptyEntries)[1];
-					}
-					if (RegexCheck(msg, "^" + pair.Key))
+					if (RegexMatch(msg, "^" + pair.Key))
 					{
 						reply = pair.Value;
 						break;
@@ -85,19 +119,6 @@ namespace h0peBot_
 				{
 					SendMessage(reply);
 				}
-			}
-		}
-
-		public bool RegexCheck(string msg, string reg)
-		{
-			Regex regex = new Regex(reg);
-			if (regex.IsMatch(msg))
-			{
-				return true;
-			}
-			else
-			{
-				return false;
 			}
 		}
 
@@ -118,9 +139,53 @@ namespace h0peBot_
 			}
 		}
 
+		private bool RegexMatch(string msg, string reg)
+		{
+			Regex regex = new Regex("(?i)" + reg); //(?i) игнорирует регистр букв
+			if (regex.IsMatch(msg))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		private bool CooldownElapsed(string key, int cooldown, string cooldownMsg = "Данная команда будет доступна через {0} сек")
+		{
+			if (cooldownDict.ContainsKey(key))
+			{
+				var i = (DateTime.Now - cooldownDict[key]).TotalSeconds;
+				if (i < cooldown)
+				{
+					SendMessage(string.Format(cooldownMsg, Math.Round(cooldown - i, 1)));
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+			else
+			{
+				cooldownDict.Add(key, DateTime.Now);
+				return true;
+			}
+		}
+
 		private void SendMessage(string message)
 		{
 			SendCommand("PRIVMSG", string.Format("#{0} :{1}", TwitchInit.ChannelName, message));
+		}
+
+		private void SendMessage(string[] messages, int delay = 0)
+		{
+			for (int i = 0; i < messages.Length; i++)
+			{
+				SendCommand("PRIVMSG", string.Format("#{0} :{1}", TwitchInit.ChannelName, messages[i]));
+				Thread.Sleep(delay);
+			}
 		}
 
 		private void SendCommand(string cmd, string param)
