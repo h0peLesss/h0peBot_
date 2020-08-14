@@ -12,8 +12,8 @@ namespace h0peBot_
 		{
 			TwitchIRCClient client = new TwitchIRCClient();
 			client.Connect();
-			Task.Run(() => client.CheckCommand());
-			client.Chat();
+			Task.Run(() => client.Chat()); 
+			client.CheckCommand();
 		}
 	}
 }
