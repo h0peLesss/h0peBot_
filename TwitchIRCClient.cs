@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 //основа кода "позаимствована" у юзера AmbushedRaccoon, большое ему за это спасiбi
 //https://github.com/AmbushedRaccoon/TwitchChatBot
@@ -28,7 +29,7 @@ namespace h0peBot_
 		private StreamWriter writer;
 		private string OAuthToken;
 		private Dictionary<string, DateTime> cooldownDict = new Dictionary<string, DateTime> { };
-		private List<string> chatBuff = new List<string>();
+		private ConcurrentQueue<string> chatBuff = new ConcurrentQueue<string>();
 		private Dictionary<string, string> commands = new Dictionary<string, string>
         
         //если разместить "!тест члена" после "!тест" в ,
@@ -59,15 +60,14 @@ namespace h0peBot_
 
 		public void CheckCommand()
 		{
+			string msg = null;
 			while (true)
 			{
-				if (chatBuff.Count == 0)
+				if (chatBuff.IsEmpty)
 				{
 					continue;
 				}
-				string msg = chatBuff.First();
-				chatBuff.RemoveAt(0);
-				string reply = null;
+				chatBuff.TryDequeue(out msg);
 				if (msg.Contains("PRIVMSG"))
 				{
 					msg = msg.Split(":", 2, StringSplitOptions.RemoveEmptyEntries)[1];
@@ -87,11 +87,11 @@ namespace h0peBot_
 					string[] ukr = {
 					"/color DodgerBlue", "ГЕРОЯМ",
 					"/color GoldenRod", "СЛАВА",
-					"/color BlueViolet"};
+					"/color BlueViolet" };
 					SendMessage(ukr);
 					continue;
 				}
-				else if (RegexMatch(msg, "^!ебаный задрот"))
+				else if (RegexMatch(msg, "^![её]баный задрот"))
 				{
 					if (!CooldownElapsed("rules", 30))
 					{
@@ -111,13 +111,9 @@ namespace h0peBot_
 				{
 					if (RegexMatch(msg, "^" + pair.Key))
 					{
-						reply = pair.Value;
+						SendMessage(pair.Value);
 						break;
 					}
-				}
-				if (reply != null)
-				{
-					SendMessage(reply);
 				}
 			}
 		}
@@ -130,7 +126,7 @@ namespace h0peBot_
 				if (message != null)
 				{
 					Console.WriteLine(message);
-					chatBuff.Add(message);
+					chatBuff.Enqueue(message);
 					if (message == "PING :tmi.twitch.tv")
 					{
 						SendCommand("PONG", ":tmi.twitch.tv");
